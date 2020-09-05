@@ -1,4 +1,3 @@
-/*
 !.gitignore
 !/macos64/
 /macos64/*.class
@@ -39,10 +38,6 @@ xcuserdata/
 *.ipa
 *.dSYM.zip
 *.dSYM
-*.xcodeproj/*
-!*.xcodeproj/project.pbxproj
-!*.xcodeproj/xcshareddata/
-!*.xcworkspace/contents.xcworkspacedata
 /*.gcno
 
 # others
