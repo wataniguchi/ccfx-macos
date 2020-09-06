@@ -1,4 +1,6 @@
 !.gitignore
+ccfx-macos.plist
+ccfx-macos.pkg
 !/macos64/
 /macos64/*.class
 /macos64/gemxlib.jar
