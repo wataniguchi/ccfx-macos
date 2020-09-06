@@ -1,0 +1,232 @@
+diff -Naur ccfx/ccfx/ccfx.cpp ccfx-macos/ccfx/ccfx.cpp
+--- ccfx/ccfx/ccfx.cpp	2010-04-08 12:22:34.000000000 +0900
++++ ccfx-macos/ccfx/ccfx.cpp	2020-09-05 14:14:29.000000000 +0900
+@@ -2563,7 +2563,7 @@
+ 			}
+ 		}
+ 		else {
+-#if defined OS_UBUNTU
++#if defined OS_UBUNTU || defined OS_MACOS
+ 			thePythonInterpreterPath = "/usr/bin/python";
+ #endif
+ #if defined _MSC_VER
+@@ -2701,8 +2701,9 @@
+ 		return 0;
+ 	}
+ 
+-	std::vector<std::string> argvec;
+-	std::for_each(argv, argv + argc, boost::bind(&std::vector<std::string>::push_back, &argvec, _1));
++	//std::vector<std::string> argvec;
++	//std::for_each(argv, argv + argc, boost::bind(&std::vector<std::string>::push_back, &argvec, _1));
++    std::vector<std::string> argvec (argv, argv + argc);
+ 	int r = expand_command_file(&argvec);
+ 	if (r != 0) {
+ 		return r;
+diff -Naur ccfx/ccfx/ccfxconstants.cpp ccfx-macos/ccfx/ccfxconstants.cpp
+--- ccfx/ccfx/ccfxconstants.cpp	2010-04-06 17:52:10.000000000 +0900
++++ ccfx-macos/ccfx/ccfxconstants.cpp	2020-09-05 12:29:20.000000000 +0900
+@@ -11,6 +11,8 @@
+ const std::string PLATFORM_NAME = "Ubuntu i386";
+ #elif defined OS_LINUX 
+ const std::string PLATFORM_NAME = "Linux";
++#elif defined OS_MACOS
++const std::string PLATFORM_NAME = "MacOSX x64";
+ #else
+ #error
+ #endif
+diff -Naur ccfx/common/allocaarray.h ccfx-macos/common/allocaarray.h
+--- ccfx/common/allocaarray.h	2009-10-15 16:05:54.000000000 +0900
++++ ccfx-macos/common/allocaarray.h	2020-09-05 11:16:37.000000000 +0900
+@@ -147,7 +147,7 @@
+ 	// assignment with type conversion
+ 	template <typename T2>
+ 	alloca_array<ElemType> &operator= (const alloca_array<T2> &rhs) {
+-		std::copy(rhs.begin(), rhs.end(), begin());
++		std::copy(rhs.begin(), rhs.end(), this->begin());
+ 		return *this;
+ 	}
+ 
+diff -Naur ccfx/common/ffuncrenamer.h ccfx-macos/common/ffuncrenamer.h
+--- ccfx/common/ffuncrenamer.h	2009-05-22 17:18:52.000000000 +0900
++++ ccfx-macos/common/ffuncrenamer.h	2020-09-05 12:03:26.000000000 +0900
+@@ -42,6 +42,19 @@
+ 
+ #elif defined __GNUC__
+ 
++#if defined OS_MACOS
++
++#define FWRITE fwrite
++#define FREAD fread
++#define FGETC fgetc
++#define FPUTC fputc
++#define FTELL64 ftello
++#define FTELL ftell
++#define FSEEK64 fseeko
++#define FSEEK fseek
++
++#else
++
+ #define FWRITE fwrite
+ #define FREAD fread
+ #define FGETC fgetc
+@@ -53,6 +66,8 @@
+ 
+ #endif
+ 
++#endif
++
+ inline void FWRITEBYTES(const char *buf, size_t bufBytes, FILE *pf) { FWRITE(buf, sizeof(char), bufBytes, pf); }
+ 
+ #endif // FFUNCRENAMER_H
+diff -Naur ccfx/common/hash_map_includer.h ccfx-macos/common/hash_map_includer.h
+--- ccfx/common/hash_map_includer.h	2009-10-15 16:05:58.000000000 +0900
++++ ccfx-macos/common/hash_map_includer.h	2020-09-05 11:22:30.000000000 +0900
+@@ -29,6 +29,14 @@
+ 
+ #elif defined __GNUC__
+ 
++#if defined OS_MACOS
++
++#include <unordered_map>
++#define HASH_MAP std::unordered_map
++#define HASH_COMPARE std::hash
++
++#else
++
+ // 2008/06/25 Modified to use TR1 container.
+ 
+ #include <tr1/unordered_map>
+@@ -39,4 +47,6 @@
+ 
+ #endif
+ 
++#endif
++
+ #endif // HASH_MAP_INCLUDER_H
+diff -Naur ccfx/common/hash_set_includer.h ccfx-macos/common/hash_set_includer.h
+--- ccfx/common/hash_set_includer.h	2009-10-15 16:05:58.000000000 +0900
++++ ccfx-macos/common/hash_set_includer.h	2020-09-05 12:31:17.000000000 +0900
+@@ -27,6 +27,13 @@
+ 
+ #elif defined __GNUC__
+ 
++#if defined OS_MACOS
++
++#include <unordered_set>
++#define HASH_SET std::unordered_set
++
++#else
++
+ // 2008/06/25 Modified to use TR1 container.
+ 
+ #include <tr1/unordered_set>
+@@ -36,4 +43,6 @@
+ 
+ #endif
+ 
++#endif
++
+ #endif // HASH_SET_INCLUDER_H
+diff -Naur ccfx/common/specialstringmap.h ccfx-macos/common/specialstringmap.h
+--- ccfx/common/specialstringmap.h	2009-10-15 16:05:58.000000000 +0900
++++ ccfx-macos/common/specialstringmap.h	2020-09-05 12:32:37.000000000 +0900
+@@ -246,7 +246,7 @@
+ 
+ 	inline bool empty() const
+ 	{
+-		return size == 0;
++		return size() == 0;
+ 	}
+ 
+ 	void clear()
+diff -Naur ccfx/common/unportable.cpp ccfx-macos/common/unportable.cpp
+--- ccfx/common/unportable.cpp	2010-04-08 13:51:22.000000000 +0900
++++ ccfx-macos/common/unportable.cpp	2020-09-06 07:01:35.000000000 +0900
+@@ -347,7 +347,7 @@
+ 	return str;
+ }
+ 
+-#elif defined OS_LINUX || defined OS_UBUNTU
++#elif defined OS_LINUX || defined OS_UBUNTU || defined OS_MACOS
+ 
+ std::string escape_spaces(const std::string &str)
+ {
+@@ -653,6 +653,21 @@
+ 	std:: string currentDir(szCurrentDir);
+ 	free(szCurrentDir);
+ 
++#if defined OS_MACOS
++    // enable the use of relative path
++    std:: string dir;
++    int ch;
++    // when relative path is given, obtain the current path first...
++    if (directory.length() > 0 && ! ((ch = directory[0]) == '/')) {
++        dir = currentDir;
++        dir += "/";
++    }
++    // ...then, append the given path
++    dir += directory;
++    if (dir.length() > 0 && ! ((ch = dir[dir.length() - 1]) == '/')) {
++        dir += "/";
++    }
++#else
+ 	std:: string dir = directory;
+ 	int ch;
+ 	if (dir.length() > 0 && ! ((ch = dir[dir.length() - 1]) == '/' || ch == '\\')) {
+@@ -664,6 +679,7 @@
+ #error
+ #endif
+ 	}
++#endif
+ 	if (_chdir(dir.c_str()) == -1) {
+ 		return false; // failure
+ 	}
+diff -Naur ccfx/common/unportable.h ccfx-macos/common/unportable.h
+--- ccfx/common/unportable.h	2009-10-15 16:05:58.000000000 +0900
++++ ccfx-macos/common/unportable.h	2020-09-05 11:47:05.000000000 +0900
+@@ -5,6 +5,10 @@
+ #define OS_UNIX
+ #endif
+ 
++#if defined OS_MACOS
++#define OS_UNIX
++#endif
++
+ #if defined OS_WIN32
+ #elif defined OS_UNIX
+ #else
+diff -Naur ccfx/common/utf8support.h ccfx-macos/common/utf8support.h
+--- ccfx/common/utf8support.h	2009-10-15 16:05:56.000000000 +0900
++++ ccfx-macos/common/utf8support.h	2020-09-05 11:49:31.000000000 +0900
+@@ -16,7 +16,10 @@
+ size_t countCharUTF8String(const std:: string &str);
+ 
+ #if defined WSTRING_CONVERSION_SUPPORT
+-
++#if defined OS_MACOS
++#define UnicodeString icu::UnicodeString
++#define StringCharacterIterator icu::StringCharacterIterator
++#endif
+ size_t toUTF8String(char *buf, const MYWCHAR_T *str, size_t strLength);
+ std:: string toUTF8String(const MYWCHAR_T *str, size_t strLength);
+ std:: string toUTF8String(const std:: basic_string<MYWCHAR_T> &str);
+diff -Naur ccfx/newengine/clonedetector.h ccfx-macos/newengine/clonedetector.h
+--- ccfx/newengine/clonedetector.h	2009-11-06 19:34:30.000000000 +0900
++++ ccfx-macos/newengine/clonedetector.h	2020-09-05 13:14:18.000000000 +0900
+@@ -14,6 +14,7 @@
+ #include <boost/thread.hpp>
+ 
+ #include "../threadqueue/threadqueue.h"
++#include "ccfxcommon.h"
+ 
+ #if defined _MSC_VER
+ #undef max
+@@ -516,7 +517,7 @@
+ 				boost::uint64_t cloneSetReferenceNumber)
+ 		{
+ 			//const typename std:: vector<ElemType> &seq = refSeq();
+-			size_t unitLength = getUnitLength();
++			//size_t unitLength = getUnitLength();
+ 
+ 			for (size_t csi = 0; csi < cloneSet.size(); ++csi) {
+ 				const CloneSetItem &cs = cloneSet[csi];
