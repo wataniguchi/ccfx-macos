@@ -1,6 +1,3 @@
 #!/bin/sh
-javac -d . ../GemX/ccfinderx/CCFinderX.java
-javah -classpath . ccfinderx.CCFinderX
+javac -h . ../GemX/ccfinderx/CCFinderX.java
 cp ccfinderx_CCFinderX.h ../GemX
-rm ccfinderx/CCFinderX.class
-rmdir ccfinderx
